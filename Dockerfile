@@ -1,15 +1,16 @@
-FROM janeczku/alpine-kubernetes:3.2
+FROM janeczku/alpine-kubernetes:3.3
 
 RUN apk --update add \
     rsyslog \
     bash \
     openjdk7 \
     make \
-    wget \
-  && : adding gnuplot for graphing \
-  && apk add gnuplot \
-    --update-cache \
-    --repository http://dl-cdn.alpinelinux.org/alpine/edge/community/
+    wget
+# Disabled gnuplot since it complains about an unresolvable dependency
+#  && : adding gnuplot for graphing \
+#  && apk add gnuplot \
+#    --update-cache \
+#    --repository http://dl-cdn.alpinelinux.org/alpine/edge/community/
 
 ENV TSDB_VERSION 2.3.0
 ENV HBASE_VERSION 1.1.3
@@ -27,6 +28,7 @@ RUN apk --update add --virtual builddeps \
     git \
     python \
   && : Install OpenTSDB and scripts \
+  && echo "Installing TSDB version v${TSDB_VERSION}" \
   && wget --no-check-certificate \
     -O v${TSDB_VERSION}.zip \
     https://github.com/OpenTSDB/opentsdb/archive/v${TSDB_VERSION}.zip \
@@ -45,6 +47,8 @@ RUN apk --update add --virtual builddeps \
   && : rm -rf /opt/opentsdb/opentsdb-${TSDB_VERSION} \
   && apk del builddeps \
   && rm -rf /var/cache/apk/*
+
+RUN cp /opt/opentsdb/opentsdb-${TSDB_VERSION}/src/opentsdb.conf /etc/
 
 #Install HBase and scripts
 RUN mkdir -p /data/hbase /root/.profile.d /opt/downloads
